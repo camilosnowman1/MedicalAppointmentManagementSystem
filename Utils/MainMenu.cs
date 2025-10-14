@@ -12,7 +12,11 @@ namespace MedicalAppointmentApp.Utils
         private readonly IAppointmentService _appointmentService;
         private readonly IEmailService _emailService;
 
-        public MainMenu(IPatientService patientService, IDoctorService doctorService, IAppointmentService appointmentService, IEmailService emailService)
+        public MainMenu(
+            IPatientService patientService,
+            IDoctorService doctorService,
+            IAppointmentService appointmentService,
+            IEmailService emailService)
         {
             _patientService = patientService;
             _doctorService = doctorService;
@@ -44,7 +48,8 @@ namespace MedicalAppointmentApp.Utils
                         new DoctorMenu(_appointmentService).Show();
                         break;
                     case "3":
-                        new PatientMenu(_patientService, _doctorService, _appointmentService).Show();
+                        // Fixed: pass emailService to PatientMenu
+                        new PatientMenu(_patientService, _doctorService, _appointmentService, _emailService).Show();
                         break;
                     case "0":
                         Console.WriteLine("Exiting...");

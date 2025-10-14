@@ -3,7 +3,6 @@ using System.Globalization;
 
 namespace MedicalAppointmentApp.Utils
 {
-    // Safe console readers to avoid crashes by invalid input
     public static class ConsoleInput
     {
         public static void Pause(string msg = "Press any key to continue...")
@@ -35,18 +34,21 @@ namespace MedicalAppointmentApp.Utils
             }
         }
 
+        // ✅ Método para leer fecha y hora
         public static DateTime ReadDateTime(string prompt, string format = "yyyy-MM-dd HH:mm")
         {
             while (true)
             {
                 Console.Write($"{prompt} (format {format}): ");
                 var s = Console.ReadLine();
-                if (DateTime.TryParseExact(s, format, CultureInfo.InvariantCulture,
-                        DateTimeStyles.None, out var dt)) return dt;
+                if (DateTime.TryParseExact(s, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                    return dt;
+
                 Console.WriteLine("Invalid date/time format. Try again.");
             }
         }
 
+        // ✅ Método para leer GUID
         public static Guid ReadGuid(string prompt)
         {
             while (true)

@@ -17,8 +17,8 @@ namespace MedicalAppointmentApp.Models
         public DateTime StartTime { get; set; }
 
         [Required]
-        [MaxLength(20)]
-        public string Status { get; set; } = "Scheduled";
+        // Use enum instead of string for better consistency and validation
+        public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
 
         public Patient Patient { get; set; }
         public Doctor Doctor { get; set; }

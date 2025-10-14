@@ -1,5 +1,7 @@
 using System;
 using MedicalAppointmentApp.Interface;
+using MedicalAppointmentApp.Models;
+using MedicalAppointmentApp.Utils;
 
 namespace MedicalAppointmentApp.Utils.Menu
 {
@@ -18,10 +20,12 @@ namespace MedicalAppointmentApp.Utils.Menu
             {
                 Console.Clear();
                 Console.WriteLine("=== Doctor Menu ===");
-                Console.WriteLine("1. View appointments by doctor");
+                Console.WriteLine("1. View all appointments");
                 Console.WriteLine("2. Mark appointment as attended");
+                Console.WriteLine("3. View pending appointments");
                 Console.WriteLine("0. Back");
                 Console.Write("Option: ");
+
                 var option = Console.ReadLine();
 
                 switch (option)
@@ -32,67 +36,90 @@ namespace MedicalAppointmentApp.Utils.Menu
                     case "2":
                         MarkAppointmentAsAttended();
                         break;
+                    case "3":
+                        ViewPendingAppointments();
+                        break;
                     case "0":
                         return;
                     default:
-                        Console.WriteLine("Invalid option. Press any key to continue...");
-                        Console.ReadKey();
+                        Console.WriteLine("Invalid option.");
+                        ConsoleInput.Pause();
                         break;
                 }
             }
         }
 
-        // View all appointments for a doctor based on their document number
+        // Display all appointments for a specific doctor
         private void ViewAppointmentsByDoctor()
         {
             Console.Clear();
-            Console.Write("Enter doctor document: ");
-            var doc = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(doc))
-            {
-                Console.WriteLine("Document cannot be empty.");
-                Console.ReadKey();
-                return;
-            }
-
+            var doc = ConsoleInput.ReadNonEmpty("Enter doctor document: ");
             var list = _appointmentService.GetAppointmentsByDoctor(doc);
 
             if (list.Count == 0)
             {
-                Console.WriteLine("No appointments found for this doctor.");
+                Console.WriteLine("No appointments found.");
             }
             else
             {
                 foreach (var a in list)
                 {
-                    Console.WriteLine($"ID: {a.Id} - Date: {a.StartTime} - Status: {a.Status}");
+                    Console.WriteLine($"ID: {a.Id} | Date: {a.StartTime} | Status: {a.Status}");
                 }
             }
-            Console.ReadKey();
+            ConsoleInput.Pause();
         }
 
-        // Mark an appointment as attended using its GUID
+        // Mark an appointment as attended
         private void MarkAppointmentAsAttended()
         {
             Console.Clear();
-            Console.Write("Enter Appointment ID (GUID): ");
-            var input = Console.ReadLine();
+            var id = ConsoleInput.ReadGuid("Enter Appointment ID (GUID): ");
 
-            if (!Guid.TryParse(input, out var id))
+            var appointment = _appointmentService.FindAppointmentById(id);
+            if (appointment == null)
             {
-                Console.WriteLine("Invalid GUID format.");
-                Console.ReadKey();
+                Console.WriteLine("Appointment not found.");
+                ConsoleInput.Pause();
                 return;
             }
 
-            var success = _appointmentService.MarkAsAttended(id);
+            if (appointment.Status == AppointmentStatus.Cancelled)
+            {
+                Console.WriteLine("This appointment was cancelled and cannot be marked as attended.");
+                ConsoleInput.Pause();
+                return;
+            }
 
-            Console.WriteLine(success
-                ? "Appointment marked as attended successfully."
-                : "Operation failed. Appointment may not exist or is already attended.");
+            appointment.Status = AppointmentStatus.Attended;
+            var ok = _appointmentService.UpdateAppointmentStatus(appointment.Id, AppointmentStatus.Attended);
 
-            Console.ReadKey();
+            Console.WriteLine(ok ? "Appointment marked as attended." : "Operation failed.");
+            ConsoleInput.Pause();
+        }
+
+        // Show only pending (scheduled) appointments
+        private void ViewPendingAppointments()
+        {
+            Console.Clear();
+            var doc = ConsoleInput.ReadNonEmpty("Enter doctor document: ");
+            var list = _appointmentService.GetAppointmentsByDoctor(doc);
+
+            var pending = list.FindAll(a => a.Status == AppointmentStatus.Scheduled);
+
+            if (pending.Count == 0)
+            {
+                Console.WriteLine("No pending appointments.");
+            }
+            else
+            {
+                Console.WriteLine("=== Pending Appointments ===");
+                foreach (var a in pending)
+                {
+                    Console.WriteLine($"ID: {a.Id} | Date: {a.StartTime} | Status: {a.Status}");
+                }
+            }
+            ConsoleInput.Pause();
         }
     }
 }

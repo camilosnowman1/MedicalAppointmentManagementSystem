@@ -124,10 +124,10 @@ namespace MedicalAppointmentApp.Utils.Menu
         {
             Console.Clear();
             var list = _patientService.GetAllPatients();
-            if (list.Count == 0) 
+            if (list.Count == 0)
                 Console.WriteLine("No patients.");
-            else 
-                foreach (var p in list) 
+            else
+                foreach (var p in list)
                     Console.WriteLine($"{p.Document} - {p.Name} - {p.Email}");
             ConsoleInput.Pause();
         }
@@ -137,14 +137,15 @@ namespace MedicalAppointmentApp.Utils.Menu
             Console.Clear();
             var spec = ConsoleInput.ReadNonEmpty("Specialty to filter: ");
             var list = _doctorService.GetDoctorsBySpecialty(spec);
-            if (list.Count == 0) 
+            if (list.Count == 0)
                 Console.WriteLine("No doctors found.");
-            else 
-                foreach (var d in list) 
+            else
+                foreach (var d in list)
                     Console.WriteLine($"{d.Document} - {d.Name} - {d.Specialty}");
             ConsoleInput.Pause();
         }
 
+        // ✅ ACTUALIZADO: crea cita y envía correo al paciente
         private void Schedule()
         {
             Console.Clear();
@@ -178,7 +179,23 @@ namespace MedicalAppointmentApp.Utils.Menu
             };
 
             var ok = _appointmentService.ScheduleAppointment(appt);
-            Console.WriteLine(ok ? "Appointment scheduled (email logged)." : "Scheduling failed.");
+            if (ok)
+            {
+                Console.WriteLine("Appointment scheduled successfully.");
+                // ✅ Enviar correo de confirmación
+                string error;
+                bool emailSent = _emailService.SendAppointmentConfirmation(appt, out error);
+
+                if (emailSent)
+                    Console.WriteLine($"✅ Confirmation email sent to {patient.Email}");
+                else
+                    Console.WriteLine($"⚠️ Email could not be sent: {error}");
+            }
+            else
+            {
+                Console.WriteLine("Scheduling failed.");
+            }
+
             ConsoleInput.Pause();
         }
 
@@ -195,7 +212,7 @@ namespace MedicalAppointmentApp.Utils.Menu
         {
             Console.Clear();
             var logs = _emailService.GetLogs();
-            if (logs.Count == 0) 
+            if (logs.Count == 0)
                 Console.WriteLine("No email logs.");
             else
                 foreach (var l in logs)
